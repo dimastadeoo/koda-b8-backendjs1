@@ -8,24 +8,23 @@ const _dirname = path.dirname(_filename)
 const DATA_DIR = path.join(_dirname, '../../data')
 
 async function checkDir() {
-    try{
+    try {
         await fs.access(DATA_DIR)
-    }catch{
-        await fs.mkdir(DATA_DIR, {recursive: true})
+    } catch {
+        await fs.mkdir(DATA_DIR, { recursive: true })
     }
 }
 
-export async function readData(filename) {
-    await checkDir()
-    const filePath = path.join(DATA_DIR, filename)
-    try{
-        const data = await fs.readFile(filePath, 'utf-8')
-        return JSON.parse(data)
-    }catch (err){
-        if (err.code === 'ENOENT'){ // file belum ada
-            return []
-        }throw err
-
+export async function readData(filename, defaultValue = []) {
+    await checkDir();
+    const filePath = path.join(DATA_DIR, filename);
+    try {
+        const data = await fs.readFile(filePath, 'utf-8');
+        if (!data.trim()) return defaultValue; // jika file kosong
+        return JSON.parse(data);
+    } catch (err) {
+        if (err.code === 'ENOENT') return defaultValue;
+        throw err;
     }
 }
 
