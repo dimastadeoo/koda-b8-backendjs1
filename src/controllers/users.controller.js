@@ -8,7 +8,29 @@ import { constants } from "node:http2"
  */
 export async function getAll(req, res) {
     try {
-        const users = await UserModels.findAll();
+        let { limit, page } = req.query
+
+        if (limit !== "" || page !== ""){
+            if (!limit || limit < 1){
+                limit = 5
+            }
+            if (!page || page < 1){
+                page = 1
+            }
+            page = parseInt(page)
+            limit = parseInt(limit)
+            if (isNaN(page) || isNaN(limit)) {
+                res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+                    success: false,
+                    message: "query page or limit must be a number",
+                })
+                return
+            }
+            
+
+        }
+        
+        const users = await UserModels.findAll(limit, page);
         res.json({
             success: true,
             message: "success Get all data users",
@@ -37,7 +59,7 @@ export async function getById(req, res) {
                 message: "User Not found ",
             })
         }
-        
+
         res.json({
             success: true,
             message: "Success found data user",
@@ -59,18 +81,18 @@ export async function getById(req, res) {
  */
 export async function createUser(req, res) {
     try {
-        const {name, email, password} = req.body
+        const { name, email, password } = req.body
 
-        if (!name || !email || ! password){
+        if (!name || !email || !password) {
             return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
                 success: false,
                 message: "data name or email or passord not null ",
             })
         }
-        
+
         const data = await UserModels.findAll()
         const existing = data.find(u => u.email === email)
-        if (existing){
+        if (existing) {
             return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
                 success: false,
                 message: "data email is alredy exist",
@@ -101,27 +123,27 @@ export async function createUser(req, res) {
 export async function updateUser(req, res) {
     try {
         const id = parseInt(req.params.id)
-        const {name, email, password} = req.body
+        const { name, email, password } = req.body
 
         const dataUpdate = {}
         if (name !== undefined) dataUpdate.name = name
         if (email !== undefined) dataUpdate.email = email
         if (password !== undefined) dataUpdate.password = password
 
-        if (Object.keys(dataUpdate).length === 0){
+        if (Object.keys(dataUpdate).length === 0) {
             return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
                 success: false,
                 message: "No data field was updated",
             })
         }
 
-        if (dataUpdate.email){
+        if (dataUpdate.email) {
             const data = await UserModels.findAll()
             const existing = data.find(u => u.email === dataUpdate.email &&
                 u.id !== id
             )
 
-            if (existing){
+            if (existing) {
                 return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
                     success: false,
                     message: "data email is alredy exist",
@@ -130,8 +152,8 @@ export async function updateUser(req, res) {
         }
 
         const updateUser = await UserModels.update(id, dataUpdate)
-      
-        if (!updateUser){
+
+        if (!updateUser) {
             return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
                 success: false,
                 message: "User Not found ",
