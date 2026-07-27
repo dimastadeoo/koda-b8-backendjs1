@@ -37,6 +37,7 @@ export function getById(req, res) {
                 message: "User Not found ",
             })
         }
+        
         res.json({
             success: true,
             message: "Success found data user",
