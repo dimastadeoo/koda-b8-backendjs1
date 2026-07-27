@@ -8,13 +8,53 @@ import { constants } from "node:http2"
  */
 export async function getAll(req, res) {
     try {
-        let { limit, page } = req.query
+        let { limit, page, search } = req.query;
 
-        if (limit !== "" || page !== ""){
-            if (!limit || limit < 1){
+        // Filter search hanya untuk kolom yang diizinkan
+        const allowedColumns = ['name', 'email'];
+        let filteredSearch = {};
+        let invalidColumns = []
+
+        // kondisi jika ada query string search
+        if (search) {
+            // Jika search adalah string → format salah
+            if (typeof search === 'string') {
+                return res.status(400).json({
+                    success: false,
+                    message: "Format search harus menggunakan object, contoh: search[name]=value atau search[email]=value"
+                });
+            }
+            if (search && typeof search === 'object') {
+                for (const [key, value] of entries) {
+                    if (!value) continue; // skip jika nilai kosong
+                    if (allowedColumns.includes(key)) {
+                        filteredSearch[key] = value;
+                    } else {
+                        invalidColumns.push(key);
+                    }
+                }
+                // Jika ada kolom yang tidak diizinkan
+                if (invalidColumns.length > 0) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `Kolom yang diizinkan untuk search hanya: ${allowedColumns.join(', ')}. Kolom tidak valid: ${invalidColumns.join(', ')}`
+                    });
+                }
+                // Jika semua kolom diabaikan karena nilai kosong
+                if (Object.keys(filteredSearch).length === 0 && entries.length > 0) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Nilai pencarian tidak boleh kosong"
+                    });
+                }
+            }
+        }
+        // kondisi jika ada query string paging
+        if (limit || page) {
+            if (!limit || limit < 1) {
                 limit = 5
             }
-            if (!page || page < 1){
+            if (!page || page < 1) {
                 page = 1
             }
             page = parseInt(page)
@@ -26,11 +66,9 @@ export async function getAll(req, res) {
                 })
                 return
             }
-            
-
         }
-        
-        const users = await UserModels.findAll(limit, page);
+
+        const users = await UserModels.findAll(limit, page, filteredSearch);
         res.json({
             success: true,
             message: "success Get all data users",
