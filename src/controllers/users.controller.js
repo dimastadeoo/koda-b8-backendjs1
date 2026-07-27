@@ -125,9 +125,8 @@ export function updateUser(req, res) {
             }
         }
 
-        const updateUser = UserModels.update({
-            id, dataUpdate
-        })
+        const updateUser = UserModels.update(id, dataUpdate)
+      
         if (!updateUser){
             return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
                 success: false,
