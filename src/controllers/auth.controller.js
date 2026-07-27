@@ -18,7 +18,8 @@ export async function register(req, res) {
             })
         }
 
-        const existing = await UserModels.findAll().find(u => u.email === email)
+        const data = await UserModels.findAll()
+        const existing = data.find(u => u.email === email)
         if (existing) {
             return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
                 success: false,
