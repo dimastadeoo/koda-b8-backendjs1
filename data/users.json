@@ -1,0 +1,42 @@
+[
+  {
+    "id": 3,
+    "name": "dimass",
+    "email": "dimas2@mail.com",
+    "password": "1234",
+    "created_at": "2026-07-27T08:59:56.119Z",
+    "updated_at": "2026-07-27T08:59:56.119Z"
+  },
+  {
+    "id": 4,
+    "name": "dimass",
+    "email": "dimas@mail.com",
+    "password": "1234",
+    "created_at": "2026-07-27T09:02:40.861Z",
+    "updated_at": "2026-07-27T09:02:40.861Z"
+  },
+  {
+    "id": 5,
+    "name": "ddidi",
+    "email": "dimas10@mail.com",
+    "password": "1234",
+    "created_at": "2026-07-27T09:05:13.773Z",
+    "updated_at": "2026-07-27T09:05:13.773Z"
+  },
+  {
+    "id": 6,
+    "name": "dimass",
+    "email": "dimas4@mail.com",
+    "password": "1234",
+    "created_at": "2026-07-27T09:12:09.750Z",
+    "updated_at": "2026-07-27T09:12:09.750Z"
+  },
+  {
+    "id": 7,
+    "name": "ddidi",
+    "email": "dimas11@mail.com",
+    "password": "1234",
+    "created_at": "2026-07-27T09:14:18.080Z",
+    "updated_at": "2026-07-27T09:14:18.080Z"
+  }
+]
