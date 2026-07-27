@@ -8,7 +8,7 @@ import { constants } from "node:http2"
  */
 export async function getAll(req, res) {
     try {
-        let { limit, page, search } = req.query;
+        let { limit, page, search, sort } = req.query;
 
         // Filter search hanya untuk kolom yang diizinkan
         const allowedColumns = ['name', 'email'];
@@ -19,7 +19,7 @@ export async function getAll(req, res) {
         if (search) {
             // Jika search adalah string → format salah
             if (typeof search === 'string') {
-                return res.status(400).json({
+                return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
                     success: false,
                     message: "Format search harus menggunakan object, contoh: search[name]=value atau search[email]=value"
                 });
@@ -35,14 +35,14 @@ export async function getAll(req, res) {
                 }
                 // Jika ada kolom yang tidak diizinkan
                 if (invalidColumns.length > 0) {
-                    return res.status(400).json({
+                    return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
                         success: false,
                         message: `Kolom yang diizinkan untuk search hanya: ${allowedColumns.join(', ')}. Kolom tidak valid: ${invalidColumns.join(', ')}`
                     });
                 }
                 // Jika semua kolom diabaikan karena nilai kosong
                 if (Object.keys(filteredSearch).length === 0 && entries.length > 0) {
-                    return res.status(400).json({
+                    return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
                         success: false,
                         message: "Nilai pencarian tidak boleh kosong"
                     });
@@ -68,7 +68,47 @@ export async function getAll(req, res) {
             }
         }
 
-        const users = await UserModels.findAll(limit, page, filteredSearch);
+        // --- Validasi Sort ---
+        const allowedSortColumns = ['id', 'name', 'email'];
+        let sortConfig = { column: 'id', order: 'asc' }; // default
+
+
+
+        if (sort) {
+            if (typeof sort === 'string') {
+                return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+                    success: false,
+                    message: "Format sort harus menggunakan object, contoh: sort[id]=asc atau sort[name]=desc"
+                });
+            }
+            if (typeof sort === 'object') {
+                const entries = Object.entries(sort);
+                if (entries.length === 0) {
+                    return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+                        success: false,
+                        message: "Sort object tidak boleh kosong"
+                    });
+                }
+                // Ambil hanya entry pertama (kita hanya support satu kolom sort)
+                const [column, order] = entries[0];
+                if (!allowedSortColumns.includes(column)) {
+                    return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+                        success: false,
+                        message: `Kolom yang diizinkan untuk sort hanya: ${allowedSortColumns.join(', ')}. Kolom tidak valid: ${column}`
+                    });
+                }
+                const normalizedOrder = order?.toLowerCase();
+                if (normalizedOrder !== 'asc' && normalizedOrder !== 'desc') {
+                    return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+                        success: false,
+                        message: `Nilai order harus 'asc' atau 'desc'. Nilai tidak valid: ${order}`
+                    });
+                }
+                sortConfig = { column, order: normalizedOrder };
+            }
+        }
+
+        const users = await UserModels.findAll(limit, page, filteredSearch, sortConfig);
         res.json({
             success: true,
             message: "success Get all data users",
