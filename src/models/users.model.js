@@ -1,37 +1,62 @@
-let users = []
-let currentId = 1
+import { readData, writeData } from "../lib/storage.js"
 
-export const findAll = () => users.map(({password, ...rest}) => rest)
+// let users = []
+// let currentId = 1
+const USERS_FILE = 'users.json'
 
-export const findById = (id) => {
+const readUsers = async function(){
+    const data = await readData(USERS_FILE)
+    return Array.isArray(data) ? data : []
+}
+
+const writeUsers = async function(users) {
+    await writeData(USERS_FILE, users)
+}
+
+const getIdUsers = (users) =>{
+    if (users.length === 0) return 1
+    return Math.max(...users.map(u => u.id)) + 1
+}
+
+export const findAll = async function() {
+    const users = await readUsers()
+    return users.map(({password, ...rest}) => rest)
+}
+
+export const findById = async function(id) {
+    const users = await readUsers()
     const user = users.find(user => user.id === id)
     if (!user) return null
     const {password, ...rest} = user
     return rest
 }
 
-export const findByEmail = (email) => {
+export const findByEmail = async function(email) {
+    const users = await readUsers()
     const user = users.find(user => user.email === email)
     if (!user) return null
 
     return user
 }
 
-export const create = (userData) => {
+export const create = async function(userData) {
+    const users = await readUsers()
     const now = new Date().toISOString()
 
     const newUser = {
-        id: currentId++,
+        id: getIdUsers(users),
         ...userData,
         created_at: now,
         updated_at: now
     }
     users.push(newUser)
-    const { password, ...userWithoutPassword } = newUser
-    return userWithoutPassword
+    await writeUsers(users)
+    const { password, ...rest } = newUser
+    return rest
 }
 
-export function update(id, updateField) {
+export async function update(id, updateField) {
+    const users = await readUsers()
     const now = new Date().toISOString()
 
     const index = users.findIndex(user => user.id === id)
@@ -42,15 +67,18 @@ export function update(id, updateField) {
         ...updateField,
         updated_at: now
     }
-    const { password, ...userWithoutPassword } = users[index]
-    return userWithoutPassword
+    const { password, ...rest } = users[index]
+    return rest
 }
 
-export const remove = function (id) {
+export const remove = async function (id) {
+    const users = await readUsers()
     const index = users.findIndex(user => user.id === id)
-    if (index === -1) return null
+    if (index === -1) return false
 
     users.splice(index, 1)
+    await writeUsers(users)
+
     return true
 }
 
