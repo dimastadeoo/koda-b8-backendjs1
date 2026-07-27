@@ -116,9 +116,11 @@ export async function updateUser(req, res) {
         }
 
         if (dataUpdate.email){
-            const existing = await UserModels.findAll().find(u => u.email === dataUpdate.email &&
+            const data = await UserModels.findAll()
+            const existing = data.find(u => u.email === dataUpdate.email &&
                 u.id !== id
             )
+
             if (existing){
                 return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
                     success: false,
