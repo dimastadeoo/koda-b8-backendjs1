@@ -18,9 +18,22 @@ const getIdUsers = (users) =>{
     return Math.max(...users.map(u => u.id)) + 1
 }
 
-export const findAll = async function() {
+export const findAll = async function(limit, page) {
     const users = await readUsers()
-    return users.map(({password, ...rest}) => rest)
+
+    if (!limit && !page){
+        return users.map(({password, ...rest}) => rest)
+    }
+    const total = users.length
+    const totalPages = Math.ceil(total / limit)
+    if (page > totalPages){
+        page = totalPages
+    }
+    const offset = (page - 1) * limit
+    const limitUser = users.slice(offset, offset + limit)
+    
+
+    return limitUser.map(({password, ...rest}) => rest)
 }
 
 export const findById = async function(id) {
