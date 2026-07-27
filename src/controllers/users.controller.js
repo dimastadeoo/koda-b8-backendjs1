@@ -6,9 +6,9 @@ import { constants } from "node:http2"
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
-export function getAll(req, res) {
+export async function getAll(req, res) {
     try {
-        const users = UserModels.findAll();
+        const users = await UserModels.findAll();
         res.json({
             success: true,
             message: "success Get all data users",
@@ -27,10 +27,10 @@ export function getAll(req, res) {
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
-export function getById(req, res) {
+export async function getById(req, res) {
     try {
         const id = parseInt(req.params.id)
-        const user = UserModels.findById(id);
+        const user = await UserModels.findById(id);
         if (!user) {
             return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
                 success: false,
@@ -57,7 +57,7 @@ export function getById(req, res) {
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
-export function createUser(req, res) {
+export async function createUser(req, res) {
     try {
         const {name, email, password} = req.body
 
@@ -68,14 +68,15 @@ export function createUser(req, res) {
             })
         }
         
-        const existing = UserModels.findAll().find(u => u.email === email)
+        const data = await UserModels.findAll()
+        const existing = data.find(u => u.email === email)
         if (existing){
             return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
                 success: false,
                 message: "data email is alredy exist",
             })
         }
-        const newUser = UserModels.create({
+        const newUser = await UserModels.create({
             name, email, password
         })
         res.status(constants.HTTP_STATUS_CREATED).json({
@@ -97,7 +98,7 @@ export function createUser(req, res) {
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
-export function updateUser(req, res) {
+export async function updateUser(req, res) {
     try {
         const id = parseInt(req.params.id)
         const {name, email, password} = req.body
@@ -115,7 +116,7 @@ export function updateUser(req, res) {
         }
 
         if (dataUpdate.email){
-            const existing = UserModels.findAll().find(u => u.email === dataUpdate.email &&
+            const existing = await UserModels.findAll().find(u => u.email === dataUpdate.email &&
                 u.id !== id
             )
             if (existing){
@@ -126,7 +127,7 @@ export function updateUser(req, res) {
             }
         }
 
-        const updateUser = UserModels.update(id, dataUpdate)
+        const updateUser = await UserModels.update(id, dataUpdate)
       
         if (!updateUser){
             return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
@@ -154,10 +155,10 @@ export function updateUser(req, res) {
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
-export function deleteUser(req, res) {
+export async function deleteUser(req, res) {
     try {
         const id = parseInt(req.params.id)
-        const deleted = UserModels.remove(id)
+        const deleted = await UserModels.remove(id)
         if (!deleted) {
             return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
                 success: false,
