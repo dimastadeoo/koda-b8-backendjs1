@@ -25,6 +25,8 @@ export async function getAll(req, res) {
                 });
             }
             if (search && typeof search === 'object') {
+                const entries = Object.entries(search);
+
                 for (const [key, value] of entries) {
                     if (!value) continue; // skip jika nilai kosong
                     if (allowedColumns.includes(key)) {
@@ -71,8 +73,6 @@ export async function getAll(req, res) {
         // --- Validasi Sort ---
         const allowedSortColumns = ['id', 'name', 'email'];
         let sortConfig = { column: 'id', order: 'asc' }; // default
-
-
 
         if (sort) {
             if (typeof sort === 'string') {
