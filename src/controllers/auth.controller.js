@@ -73,13 +73,14 @@ export async function login(req, res) {
             })
         }
         res.setHeader('Authentication', 'hello')
+        const userDisplay = await UserModels.findById(foundUser.id)
 
         res.json({
             success: true,
-            message: `Success Login user ${foundUser.email}`,
+            message: `Success Login user ${userDisplay.email}`,
             results: {
                 token: 'hello',
-                user: foundUser
+                user: userDisplay
             }
         })
 
