@@ -58,8 +58,6 @@ export function login(req, res) {
             })
         }
         const foundUser = UserModels.findByEmail(email)
-        console.log(foundUser.password)
-        console.log(password)
         if (!foundUser){
             return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
                 success: false,
