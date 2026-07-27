@@ -27,7 +27,7 @@ export function update(id, updateField) {
         ...updateField,
         updated_at: now,
     }
-    return users[i]
+    return users[index]
 }
 
 export const remove = function(id){
@@ -35,5 +35,6 @@ export const remove = function(id){
     if (index === -1) return null
 
     users.splice(index, 1)
+    return true
 }
 
