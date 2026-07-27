@@ -10,6 +10,13 @@ export const findById = (id) => {
     return rest
 }
 
+export const findByEmail = (email) => {
+    const user = users.find(user => user.email === email)
+    if (!user) return null
+
+    return user
+}
+
 export const create = (userData) => {
     const now = new Date().toISOString()
 
@@ -46,4 +53,5 @@ export const remove = function (id) {
     users.splice(index, 1)
     return true
 }
+
 
