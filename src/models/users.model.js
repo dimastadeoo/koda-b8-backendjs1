@@ -4,47 +4,61 @@ import { readData, writeData } from "../lib/storage.js"
 // let currentId = 1
 const USERS_FILE = 'users.json'
 
-const readUsers = async function(){
+const readUsers = async function () {
     const data = await readData(USERS_FILE)
     return Array.isArray(data) ? data : []
 }
 
-const writeUsers = async function(users) {
+const writeUsers = async function (users) {
     await writeData(USERS_FILE, users)
 }
 
-const getIdUsers = (users) =>{
+const getIdUsers = (users) => {
     if (users.length === 0) return 1
     return Math.max(...users.map(u => u.id)) + 1
 }
 
-export const findAll = async function(limit, page) {
-    const users = await readUsers()
+export const findAll = async function (limit, page, search) {
+    let users = await readUsers()
 
-    if (!limit && !page){
-        return users.map(({password, ...rest}) => rest)
+    // cari search jika ada
+    if (search && typeof search === 'object') {
+        for (const [column, value] of Object.entries(search)) {
+            if (value) {
+                const searchValue = value.toLowerCase().trim();
+                users = users.filter(user => {
+                    const fieldValue = user[column]?.toLowerCase() || '';
+                    return fieldValue.includes(searchValue);
+                });
+            }
+        }
     }
+    // jika tidak ada paging maka tampilkan all data
+    if (!limit && !page) {
+        return users.map(({ password, ...rest }) => rest)
+    }
+    // jika ada paging
     const total = users.length
     const totalPages = Math.ceil(total / limit)
-    if (page > totalPages){
+    if (page > totalPages) {
         page = totalPages
     }
     const offset = (page - 1) * limit
     const limitUser = users.slice(offset, offset + limit)
-    
 
-    return limitUser.map(({password, ...rest}) => rest)
+
+    return limitUser.map(({ password, ...rest }) => rest)
 }
 
-export const findById = async function(id) {
+export const findById = async function (id) {
     const users = await readUsers()
     const user = users.find(user => user.id === id)
     if (!user) return null
-    const {password, ...rest} = user
+    const { password, ...rest } = user
     return rest
 }
 
-export const findByEmail = async function(email) {
+export const findByEmail = async function (email) {
     const users = await readUsers()
     const user = users.find(user => user.email === email)
     if (!user) return null
@@ -52,7 +66,7 @@ export const findByEmail = async function(email) {
     return user
 }
 
-export const create = async function(userData) {
+export const create = async function (userData) {
     const users = await readUsers()
     const now = new Date().toISOString()
 
