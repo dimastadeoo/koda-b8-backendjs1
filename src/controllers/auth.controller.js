@@ -7,7 +7,7 @@ import { constants } from "node:http2"
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
-export function register(req, res) {
+export async function register(req, res) {
     try {
         const { name, email, password } = req.body
 
@@ -18,14 +18,14 @@ export function register(req, res) {
             })
         }
 
-        const existing = UserModels.findAll().find(u => u.email === email)
+        const existing = await UserModels.findAll().find(u => u.email === email)
         if (existing) {
             return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
                 success: false,
                 message: "data email is alredy exist",
             })
         }
-        const newUser = UserModels.create({
+        const newUser = await UserModels.create({
             name, email, password
         })
         res.status(constants.HTTP_STATUS_CREATED).json({
@@ -47,7 +47,7 @@ export function register(req, res) {
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
-export function login(req, res) {
+export async function login(req, res) {
     try {
         const { email, password } = req.body
 
@@ -57,7 +57,7 @@ export function login(req, res) {
                 message: "email or passord not null",
             })
         }
-        const foundUser = UserModels.findByEmail(email)
+        const foundUser = await UserModels.findByEmail(email)
         if (!foundUser){
             return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
                 success: false,
