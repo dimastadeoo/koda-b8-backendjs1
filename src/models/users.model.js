@@ -51,9 +51,8 @@ const applySearchFilters = (users, search) => {
     return users   
 }
 
-export const findAll = async function (limit, page, search, sortConfig) {
+export const findAll = async function (limit, page, search, sortConfig={ column: 'id', order: 'asc' }) {
     let users = await readUsers()
-    console.log(search)
 
     // Terapkan filter search (jika ada)
     users = applySearchFilters(users, search)
@@ -101,6 +100,7 @@ export const create = async function (userData) {
     const newUser = {
         id: getIdUsers(users),
         ...userData,
+        picture: null,
         created_at: now,
         updated_at: now
     }
@@ -122,6 +122,7 @@ export async function update(id, updateField) {
         ...updateField,
         updated_at: now
     }
+    await writeUsers(users)
     const { password, ...rest } = users[index]
     return rest
 }
