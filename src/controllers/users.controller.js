@@ -1,5 +1,12 @@
 import * as UserModels from "../models/users.model.js"
 import { constants } from "node:http2"
+import fs from "node:fs"
+import path from "node:path";
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const UPLOAD_DIR = path.join(__dirname, '../../uploads');
 
 /**
  * 
@@ -72,7 +79,7 @@ export async function getAll(req, res) {
 
         // --- Validasi Sort ---
         const allowedSortColumns = ['id', 'name', 'email'];
-        let sortConfig = { column: 'id', order: 'asc' }; // default
+        let sortConfig = {}
 
         if (sort) {
             if (typeof sort === 'string') {
@@ -115,7 +122,7 @@ export async function getAll(req, res) {
             results: users
         })
     } catch (err) {
-        res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
             success: false,
             message: "Failed Get data because " + err.message,
         })
@@ -145,7 +152,7 @@ export async function getById(req, res) {
         })
 
     } catch (err) {
-        res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
             success: false,
             message: "Failed Get data because " + err.message,
         })
@@ -186,7 +193,7 @@ export async function createUser(req, res) {
         })
 
     } catch (err) {
-        res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
             success: false,
             message: "Failed Send data because " + err.message,
         })
@@ -245,7 +252,7 @@ export async function updateUser(req, res) {
         })
 
     } catch (err) {
-        res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
             success: false,
             message: "Failed Send data because " + err.message,
         })
@@ -277,5 +284,79 @@ export async function deleteUser(req, res) {
             success: false,
             message: "Failed Get data because " + err.message,
         })
+    }
+}
+
+/**
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ */
+export async function uploadPicture(req, res) {
+    try {
+        const id = parseInt(req.params.id)
+        if (isNaN(id)) {
+            return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+                success: false,
+                message: "ID users must be a number",
+            })
+        }
+        const user = await UserModels.findById(id)
+        if (!user) {
+            return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
+                success: false,
+                message: "User Id Not Found",
+            })
+        }
+        if (!req.file) {
+            return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+                success: false,
+                message: "Upload file is failed",
+            })
+        }
+
+        // --- Hapus file lama jika ada ---
+        const oldPicture = user.picture; 
+        if (oldPicture) {
+            // Ubah path relatif menjadi absolut
+            const oldFilePath = path.join(UPLOAD_DIR, path.basename(oldPicture));
+            if (fs.existsSync(oldFilePath)) {
+                try {
+                    fs.unlinkSync(oldFilePath);
+                    console.log(`old file is deleted: ${oldFilePath}`);
+                } catch (err) {
+                    console.error(`old file is fail deleted: ${err.message}`);
+                }
+            }
+        }
+
+
+        const picturePath = `/uploads/${req.file.filename}`
+        const updateUser = await UserModels.update(id, {picture: picturePath})
+
+        res.json({
+            success: true,
+            message: `Success upload picture`,
+            results: updateUser
+        })
+
+    } catch (err) {
+        // Tangani error dari multer
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(413).json({
+                success: false,
+                message: 'Ukuran file maksimal 2 MB'
+            });
+        }
+        if (err.message && err.message.includes('image type')) {
+            return res.status(400).json({
+                success: false,
+                message: err.message
+            });
+        }
+        return res.status(500).json({
+            success: false,
+            message: "Failed upload picture: " + err.message,
+        });
     }
 }
